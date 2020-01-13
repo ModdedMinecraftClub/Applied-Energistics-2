@@ -36,6 +36,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 
+import appeng.core.AELog;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -86,7 +87,7 @@ import appeng.me.helpers.BaseActionSource;
 import appeng.me.helpers.GenericInterestManager;
 import appeng.tile.crafting.TileCraftingStorageTile;
 import appeng.tile.crafting.TileCraftingTile;
-
+import appeng.core.AELog;
 
 public class CraftingGridCache implements ICraftingGrid, ICraftingProviderHelper, ICellProvider, IMEInventoryHandler<IAEItemStack>
 {
@@ -139,8 +140,10 @@ public class CraftingGridCache implements ICraftingGrid, ICraftingProviderHelper
 			this.updateCPUClusters();
 		}
 
+		// AELog.debug("CraftingGridCache.onUpdateTick() called");
 		if( this.updatePatterns )
 		{
+			AELog.debug("CraftingGridCache.onUpdateTick() calling this.updatePatterns()");
 			this.updatePatterns = false;
 			this.updatePatterns();
 		}
@@ -192,7 +195,10 @@ public class CraftingGridCache implements ICraftingGrid, ICraftingProviderHelper
 		if( machine instanceof ICraftingProvider )
 		{
 			this.craftingProviders.remove( machine );
-			this.updatePatterns = true;
+			if(!this.updatePatterns) {
+				AELog.debug("CraftingGridCache.removeNode(instanceof ICraftingProvider, machine= \" + machine.toString() + \" set this.updatePatterns = true;");
+				this.updatePatterns = true;
+			}
 		}
 	}
 
@@ -226,7 +232,15 @@ public class CraftingGridCache implements ICraftingGrid, ICraftingProviderHelper
 		if( machine instanceof ICraftingProvider )
 		{
 			this.craftingProviders.add( (ICraftingProvider) machine );
-			this.updatePatterns = true;
+			if(!this.updatePatterns) {
+				AELog.debug("CraftingGridCache.addNode(instanceof ICraftingProvider, machine= " + machine.toString()+ ") set this.updatePatterns = true;");
+				AELog.debug("CraftingGridCache.addNode(instanceof ICraftingProvider, gridnode playerID= " + gridNode.getPlayerID()+ ")");
+				AELog.debug("CraftingGridCache.addNode(instanceof ICraftingProvider, gridnode world= " + gridNode.getWorld().getWorldInfo().getWorldName()+ ")");
+				AELog.debug("CraftingGridCache.addNode(instanceof ICraftingProvider, gridnode meetschannelreq= " + gridNode.meetsChannelRequirements()+ ")");
+				AELog.debug("CraftingGridCache.addNode(instanceof ICraftingProvider, gridnode isactive " + gridNode.isActive()+ ")");
+				AELog.debug("CraftingGridCache.addNode(instanceof ICraftingProvider, this= " + this.toString() + ")");
+				this.updatePatterns = true;
+			}
 		}
 	}
 
@@ -249,6 +263,7 @@ public class CraftingGridCache implements ICraftingGrid, ICraftingProviderHelper
 
 	private void updatePatterns()
 	{
+		AELog.debug("CraftingGridCache.updatePatterns() started");
 		final Map<IAEItemStack, ImmutableList<ICraftingPatternDetails>> oldItems = this.craftableItems;
 
 		// erase list.
@@ -296,6 +311,7 @@ public class CraftingGridCache implements ICraftingGrid, ICraftingProviderHelper
 
 		this.storageGrid.postAlterationOfStoredItems( AEApi.instance().storage().getStorageChannel( IItemStorageChannel.class ), this.craftableItems.keySet(),
 				new BaseActionSource() );
+		AELog.debug("CraftingGridCache.updatePatterns() finished");
 	}
 
 	private void updateCPUClusters()
@@ -344,7 +360,10 @@ public class CraftingGridCache implements ICraftingGrid, ICraftingProviderHelper
 	@MENetworkEventSubscribe
 	public void updateCPUClusters( final MENetworkCraftingPatternChange c )
 	{
-		this.updatePatterns = true;
+		if(!this.updatePatterns) {
+			AELog.debug("CraftingGridCache.updateCPUClusters() set this.updatePatterns = true;");
+			this.updatePatterns = true;
+		}
 	}
 
 	@Override
@@ -668,5 +687,6 @@ public class CraftingGridCache implements ICraftingGrid, ICraftingProviderHelper
 		{
 			// no..
 		}
+
 	}
 }
